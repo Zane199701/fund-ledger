@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>基金账本管理</title>
+<style>
+:root {
+  --bg: #F2F2F7;
+  --card: #FFFFFF;
+  --text: rgba(28,28,30,1);
+  --text-2: rgba(60,60,67,0.6);
+  --text-3: rgba(60,60,67,0.3);
+  --accent: #007AFF;
+  --accent-l: rgba(0,122,255,0.1);
+  --border: rgba(60,60,67,0.12);
+  --up: #C40909;
+  --down: #00AA11;
+  --radius: 14px;
+  --radius-s: 10px;
+  --radius-xs: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-m: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #000000;
+    --card: #1C1C1E;
+    --text: rgba(235,235,245,1);
+    --text-2: rgba(235,235,245,0.6);
+    --text-3: rgba(235,235,245,0.3);
+    --accent: #0A84FF;
+    --accent-l: rgba(10,132,255,0.15);
+    --border: rgba(84,84,88,0.65);
+    --up: #FF453A;
+    --down: #30D158;
+    --shadow: none;
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.4);
+  }
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
+header.page {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+header.page h1 { font-size: 1.2rem; font-weight: 700; }
+header.page .sub { font-size: 0.75rem; color: var(--text-2); margin-top: 2px; }
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.card h2 { font-size: 0.95rem; font-weight: 600; margin-bottom: 12px; }
+.card h2 .step {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent-l); color: var(--accent);
+  font-size: 0.75rem; font-weight: 700; margin-right: 8px;
+  vertical-align: middle;
+}
+.hint { font-size: 0.75rem; color: var(--text-2); margin-top: 8px; }
+.hint b { color: var(--text); font-weight: 600; }
+
+.btn {
+  appearance: none; border: none; cursor: pointer;
+  font-family: var(--font); font-size: 0.85rem; font-weight: 600;
+  height: 38px; padding: 0 18px; border-radius: var(--radius-s);
+  background: var(--accent); color: #fff;
+  transition: opacity 0.15s, transform 0.1s;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.45; cursor: default; transform: none; }
+.btn.secondary {
+  background: var(--card); color: var(--accent);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.btn.block { width: 100%; }
+.btn.sm { height: 34px; padding: 0 14px; font-size: 0.8rem; }
+.btn.tiny { height: 30px; padding: 0 10px; font-size: 0.74rem; }
+.btn.tiny.danger { color: var(--up); }
+
+input[type="password"], input[type="text"], input[type="email"] {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: var(--font);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input[type="password"]:focus, input[type="text"]:focus, input[type="email"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-l);
+}
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 0.75rem; color: var(--text-2); font-weight: 500; margin-bottom: 5px; }
+
+.err { font-size: 0.78rem; color: var(--up); margin-top: 10px; min-height: 18px; }
+.ok-msg { font-size: 0.78rem; color: var(--down); margin-top: 10px; }
+
+textarea {
+  width: 100%; min-height: 150px; resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-m); font-size: 0.78rem; line-height: 1.6;
+}
+textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-l); }
+
+.file-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.file-row input[type="file"] { display: none; }
+
+.stats-bar {
+  display: flex; gap: 10px; flex-wrap: wrap; margin: 12px 0;
+}
+.stat {
+  flex: 1; min-width: 100px;
+  background: var(--bg); border-radius: var(--radius-xs);
+  padding: 10px 12px; text-align: center;
+}
+.stat .v { font-size: 1.1rem; font-weight: 700; font-family: var(--font-m); }
+.stat .l { font-size: 0.68rem; color: var(--text-2); margin-top: 2px; }
+.stat.warn .v { color: var(--up); }
+
+/* 预览表格容器：窄屏横向滚动 */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+th { font-size: 0.7rem; color: var(--text-2); font-weight: 500; white-space: nowrap; }
+td.num, th.num { text-align: right; font-family: var(--font-m); }
+tr:last-child td { border-bottom: none; }
+.user-row td { cursor: default; }
+.fund-subtable { margin: 6px 0 2px 10px; }
+.fund-subtable td { font-size: 0.75rem; color: var(--text-2); padding: 4px 10px; }
+.pos { color: var(--up); }
+.neg { color: var(--down); }
+.muted { color: var(--text-3); }
+.warn-txt { color: var(--text-2); }
+code.inline {
+  font-family: var(--font-m); font-size: 0.78rem;
+  background: var(--accent-l); color: var(--accent);
+  padding: 1px 6px; border-radius: 4px;
+}
+.error-list, .warn-list { font-size: 0.78rem; }
+.error-list li { color: var(--up); margin: 4px 0; list-style: none; }
+.warn-list li { color: var(--text-2); margin: 4px 0; list-style: none; }
+
+.result-panel {
+  background: var(--bg); border-radius: var(--radius-xs);
+  padding: 14px 16px; font-size: 0.85rem;
+}
+.result-panel .row { display: flex; justify-content: space-between; padding: 3px 0; }
+.result-panel .row .k { color: var(--text-2); }
+.result-panel .row .v { font-family: var(--font-m); font-weight: 600; }
+
+.loading { text-align: center; color: var(--text-2); font-size: 0.8rem; padding: 14px 0; }
+
+#loginCard .logo {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: var(--accent-l); color: var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; margin: 0 auto 14px;
+}
+#loginCard { text-align: center; padding-top: 34px; padding-bottom: 30px; }
+
+.tag {
+  display: inline-block; font-size: 0.68rem; padding: 1px 8px;
+  border-radius: 20px; background: var(--accent-l); color: var(--accent);
+  font-weight: 600; margin-left: 6px;
+}
+.tag.warn { background: rgba(200,9,9,0.1); color: var(--up); }
+
+.actions-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+/* ==================== 线上持仓实时编辑 ==================== */
+.live-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-3); margin-left: 6px; vertical-align: middle;
+}
+.live-dot.on { background: #30D158; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+.user-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  padding: 12px 14px;
+  margin-top: 12px;
+  background: var(--bg);
+}
+.user-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; flex-wrap: wrap;
+}
+.user-title { font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.u-nick { font-size: 0.9rem; }
+.u-count { font-size: 0.7rem; color: var(--text-2); font-weight: 500; }
+.user-amt {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-m); font-size: 0.8rem;
+}
+.u-total { font-weight: 700; font-size: 0.9rem; }
+.u-pnl { font-size: 0.74rem; }
+.fund-rows { margin-top: 4px; }
+.fund-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 9px 0;
+  border-top: 1px solid var(--border);
+}
+.fund-main { flex: 1; min-width: 0; }
+.f-code { font-family: var(--font-m); font-size: 0.8rem; }
+.f-name { font-size: 0.72rem; margin-left: 6px; }
+.fund-nums {
+  text-align: right; font-family: var(--font-m); font-size: 0.78rem;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 1px;
+}
+.f-pnl { font-size: 0.72rem; }
+.fund-ops { display: flex; gap: 6px; flex-shrink: 0; }
+.fund-empty { padding: 10px 0; font-size: 0.75rem; }
+.user-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding-top: 8px; border-top: 1px solid var(--border);
+}
+.u-upd { font-size: 0.68rem; }
+
+/* 内联编辑/添加表单（桌面双列、窄屏单列） */
+.edit-form {
+  width: 100%;
+  background: var(--card);
+  border-radius: var(--radius-xs);
+  padding: 12px;
+  margin-top: 8px;
+  box-shadow: var(--shadow);
+}
+.edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.edit-form .actions-row { margin-top: 4px; }
+.edit-form .field { margin-bottom: 10px; }
+
+/* 轻提示 */
+.toast {
+  position: fixed; left: 50%; bottom: 28px;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(0,0,0,0.78); color: #fff;
+  padding: 9px 20px; border-radius: 22px;
+  font-size: 0.82rem;
+  opacity: 0; transition: opacity 0.25s, transform 0.25s;
+  z-index: 999; pointer-events: none;
+  max-width: 86vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ==================== 移动端适配（触控目标 ≥ 40px，输入 16px 防 iOS 缩放） ==================== */
+@media (max-width: 640px) {
+  .wrap { padding: 16px 12px 48px; }
+  header.page h1 { font-size: 1.05rem; }
+  .card { padding: 14px 14px; border-radius: 12px; }
+  .card h2 { font-size: 0.9rem; }
+  .btn { height: 42px; }
+  .btn.sm { height: 38px; }
+  .btn.tiny { height: 36px; padding: 0 12px; font-size: 0.78rem; }
+  input[type="password"], input[type="text"], input[type="email"] { font-size: 16px; padding: 11px 14px; }
+  textarea { font-size: 0.82rem; }
+  .stat { min-width: 42%; }
+  /* 基金行：窄屏改为两行布局（信息一行 + 数值/操作一行），避免横向挤压 */
+  .fund-row { flex-wrap: wrap; }
+  .fund-main { flex-basis: 100%; }
+  .fund-nums { flex-direction: row; align-items: center; gap: 12px; }
+  .f-pnl { font-size: 0.78rem; }
+  .fund-ops { margin-left: auto; }
+  .user-amt { flex-basis: 100%; justify-content: space-between; }
+  .user-foot { flex-wrap: wrap; }
+  .actions-row .btn { flex: 1; min-width: 120px; }
+  .edit-grid { grid-template-columns: 1fr 1fr; gap: 0 8px; }
+}
+@media (max-width: 400px) {
+  .edit-grid { grid-template-columns: 1fr; }
+}
+
+/* 持仓展开/收起 */
+.toggle-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 0.85rem; color: var(--text-2);
+  padding: 0 4px 0 0; line-height: 1;
+}
+.user-block.collapsed .fund-rows { display: none; }
+.user-block.collapsed .fund-empty { display: none; }
+
+/* 用户编辑（改昵称/校验码）表单复用 .edit-form 外观 */
+.user-edit-form { margin-top: 8px; }
+
+/* 对比导入弹窗 */
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.42);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 16px;
+}
+.modal {
+  background: var(--card); border-radius: var(--radius);
+  max-width: 680px; width: 100%; max-height: 86vh;
+  display: flex; flex-direction: column; box-shadow: var(--shadow-lg);
+}
+.modal-head {
+  padding: 15px 18px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.modal-head h3 { font-size: 1rem; }
+.modal-head .sub { font-size: 0.72rem; color: var(--text-2); }
+.modal-body { padding: 12px 18px; overflow: auto; }
+.modal-foot {
+  padding: 12px 18px; border-top: 1px solid var(--border);
+  display: flex; gap: 10px; justify-content: flex-end;
+}
+.diff-sec { margin-bottom: 14px; }
+.diff-sec h4 { font-size: 0.82rem; margin-bottom: 4px; color: var(--text-2); }
+.diff-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 0; border-top: 1px solid var(--border);
+  font-size: 0.8rem; flex-wrap: wrap;
+}
+.diff-row .dc { font-family: var(--font-m); font-size: 0.76rem; }
+.diff-row .dn { font-weight: 600; }
+.choice { display: flex; gap: 14px; margin-left: auto; }
+.choice label { display: flex; align-items: center; gap: 4px; font-size: 0.76rem; cursor: pointer; }
+.badge {
+  font-size: 0.66rem; padding: 1px 7px; border-radius: 10px;
+  background: var(--accent-l); color: var(--accent); font-weight: 600;
+}
+.badge.new { background: rgba(0,170,17,0.14); color: var(--down); }
+.badge.unchanged { background: var(--bg); color: var(--text-2); }
+.badge.remove { background: rgba(196,9,9,0.1); color: var(--up); }
+.modal .quick { font-size: 0.72rem; color: var(--accent); cursor: pointer; margin-left: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <div>
+      <h1>基金账本管理</h1>
+      <div class="sub">在线编辑持仓，或导入 CSV 一键同步</div>
+    </div>
+    <button class="btn secondary sm" id="exitBtn" style="display:none">退出管理</button>
+  </header>
+
+  <!-- ① 管理员登录（Firebase Authentication 邮箱密码账号） -->
+  <div class="card" id="loginCard">
+    <div class="logo">🔐</div>
+    <h2 style="text-align:center">管理员登录</h2>
+    <div class="field" style="max-width:320px;margin:14px auto 0">
+      <input type="email" id="adminEmail" placeholder="管理员邮箱" autocomplete="username">
+    </div>
+    <div class="field" style="max-width:320px;margin:10px auto 0">
+      <input type="password" id="adminPwd" placeholder="密码" autocomplete="current-password">
+    </div>
+    <button class="btn block" id="adminLoginBtn" style="max-width:320px;margin:12px auto 0">登 录</button>
+    <p class="err" id="adminLoginErr"></p>
+    <p class="hint" style="margin-top:16px">管理员账号在 Firebase 控制台 → Authentication 中创建（见 DEPLOY.md）</p>
+  </div>
+
+  <!-- 工作区 -->
+  <div id="workspace" style="display:none">
+
+    <!-- ② 线上持仓实时编辑（Firestore onSnapshot 实时联动） -->
+    <div class="card" id="liveCard">
+      <h2><span class="step">1</span>线上持仓 <span class="live-dot" id="liveDot" title="实时连接状态"></span></h2>
+      <p class="hint" style="margin-top:0">
+        数据实时来自 Firestore：每只基金右侧的 <b>改</b> / <b>删</b> 直接调整持有金额与持有收益，保存后立即生效（在线用户约 60 秒内自动更新）。
+        持仓默认收起（点 <b>▸</b> 展开）；<b>编辑用户</b> 可改昵称与校验码；<b>导出 CSV</b> 可下载当前全部持仓（与导入同格式）。
+      </p>
+      <div class="actions-row" style="margin-top:10px">
+        <button class="btn secondary sm" id="newUserBtn">+ 新建用户</button>
+        <button class="btn secondary sm" id="exportBtn">导出 CSV</button>
+      </div>
+      <!-- 新建用户表单 -->
+      <div class="edit-form" id="newUserForm" style="display:none">
+        <div class="edit-grid">
+          <div class="field">
+            <label>校验码（6 位字母/数字，发给用户的口令）</label>
+            <input type="text" id="nuCode" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="如 A1B2C3">
+          </div>
+          <div class="field">
+            <label>称呼（最多 32 字）</label>
+            <input type="text" id="nuNick" maxlength="32" placeholder="如 老王">
+          </div>
+        </div>
+        <div class="actions-row">
+          <button class="btn sm" id="nuSave">创建用户</button>
+          <button class="btn secondary sm" id="nuCancel">取消</button>
+        </div>
+      </div>
+      <div id="liveBody"><div class="loading">连接 Firestore...</div></div>
+    </div>
+
+    <!-- ③ CSV 导入（批量建账：一次管理全部用户） -->
+    <div class="card">
+      <h2><span class="step">2</span>导入 CSV（批量）</h2>
+      <div class="field">
+        <label>粘贴 CSV 内容（或选择文件）</label>
+        <textarea id="csvText" placeholder="校验码,称呼,基金代码,持有金额,持有收益&#10;A1B2C3,老王,005827,12000.00,1850.50&#10;A1B2C3,老王,161725,8000.00,-320.10&#10;K9M8N7,小李,110022,5000.00,260.00"></textarea>
+      </div>
+      <div class="file-row">
+        <button class="btn secondary sm" id="chooseFileBtn">选择 CSV 文件</button>
+        <button class="btn secondary sm" id="tplBtn">下载模板</button>
+        <input type="file" id="csvFile" accept=".csv,.txt">
+        <span class="hint" id="fileInfo" style="margin-top:0"></span>
+      </div>
+      <p class="hint">
+        每行 = 某人的一只基金：<b>持有金额</b>（当前市值，非负数）与 <b>持有收益</b>（累计盈亏，可为负）直接填写。
+        校验码须为 <b>6 位字母/数字</b>（不区分大小写）。支持自动识别 Excel 导出的 GBK 编码文件。
+      </p>
+    </div>
+
+    <!-- ④ 解析预览 -->
+    <div class="card" id="previewCard" style="display:none">
+      <h2><span class="step">3</span>解析预览</h2>
+      <div class="stats-bar" id="previewStats"></div>
+      <div id="previewBody"><div class="loading">解析中...</div></div>
+      <p class="hint" id="previewHint"></p>
+    </div>
+
+    <!-- ⑤ 一键同步 -->
+    <div class="card" id="syncCard" style="display:none">
+      <h2><span class="step">4</span>同步到线上</h2>
+      <div class="actions-row">
+        <button class="btn" id="syncBtn">一键同步</button>
+      </div>
+      <div id="syncResult" style="margin-top:14px"></div>
+      <p class="hint">确认导入会先与线上数据对比：新增用户直接写入；已存在用户可在弹窗中选择「覆盖」或「插入新增」（保留原持仓并追加 CSV 新基金）；CSV 中不存在的线上校验码默认保留（可在弹窗改为删除）。金额历史均保留。</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- Firebase compat SDK（Auth 管理员登录 + Firestore 读写） -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<script>
+(function() {
+'use strict';
+
+/* ==================== 配置 ==================== */
+var COLLECTION = 'ledgers';   // Firestore 集合名（与 firestore.rules 一致）
+var PROBE_CODE = 'probe____________________________________________________________';  // 主页面探测文档 ID，不属于任何用户，同步/列表时忽略
+var MAX_CSV_BYTES = 900 * 1024;  // CSV 大小上限
+
+var state = {
+  csv: '',          // 当前 CSV 文本
+  preview: null     // 最近一次预览结果
+};
+
+/* 线上实时数据状态 */
+var live = {
+  on: false,          // onSnapshot 已连接
+  users: [],          // [{code,nick,positions,totalAmount,amountLog,updated}]
+  lastJson: '',       // 数据快照去重（无变化不重绘）
+  editing: null,      // {code, fund} 当前打开的「修改基金」表单
+  adding: null,       // code 当前打开「添加基金」表单的用户
+  formOpen: false,    // 任一内联表单打开（打开期间不重绘，避免输入被打断）
+  dirty: false,       // 表单打开期间收到远端更新，待表单关闭后重绘
+  nameCache: {},      // 基金代码 -> 名称（null = 已查询但未识别）
+  collapsed: {}       // code -> true 表示持仓收起（默认收起）
+};
+var namePending = {}; // 基金代码 -> 查询中
+
+var $ = function(id) { return document.getElementById(id); };
+
+// 配置守卫：firebase-config.js 未填写 → 提示部署
+function isConfigured() {
+  var c = (typeof FIREBASE_CONFIG !== 'undefined') ? FIREBASE_CONFIG : null;
+  return !!(c && c.apiKey && String(c.apiKey).indexOf('在此粘贴') < 0);
+}
+
+var db = null;
+
+function esc(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function isFiniteNum(v) {
+  return typeof v === 'number' && isFinite(v);
+}
+
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+function localDateStr() {
+  var d = new Date();
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+}
+
+function fmtMoney(v) {
+  return (+v || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtSigned(v) {
+  v = +v || 0;
+  return (v >= 0 ? '+' : '') + v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtTime(iso) {
+  if (!iso) return '';
+  try {
+    var d = new Date(iso);
+    return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  } catch (e) { return iso; }
+}
+
+// 轻提示（保存成功等，不打断操作）
+function toast(msg) {
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(function() { t.classList.add('show'); });
+  setTimeout(function() {
+    t.classList.remove('show');
+    setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 300);
+  }, 1800);
+}
+
+/* ==================== 用户文档组装（在线编辑与 CSV 同步共用） ==================== */
+// 文档结构：ledgers/{校验码} = {
+//   nick, updated,
+//   positions: [{code, amount, profit}],
+//   totalAmount,                    // 持仓持有金额合计
+//   amountLog: [{date, totalAmount}] // 按天金额日志（保留旧历史，今日条目更新为最新总额）
+// }
+function buildUserDoc(nick, positions, oldData, nowIso) {
+  var total = 0;
+  var pos = (positions || []).map(function(p) {
+    p = p || {};
+    var amt = Math.round((+p.amount || 0) * 100) / 100;
+    var pro = Math.round((+p.profit || 0) * 100) / 100;
+    total += amt;
+    return { code: String(p.code || ''), amount: amt, profit: pro };
+  });
+  total = Math.round(total * 100) / 100;
+  // 金额日志：承接旧文档历史，按天 upsert 今日总额
+  var log = [];
+  if (oldData && Array.isArray(oldData.amountLog)) {
+    oldData.amountLog.forEach(function(d) {
+      if (d && d.date) log.push({ date: String(d.date), totalAmount: +d.totalAmount || 0 });
+    });
+  }
+  var today = localDateStr();
+  var found = false;
+  for (var i = 0; i < log.length; i++) {
+    if (log[i].date === today) { log[i].totalAmount = total; found = true; break; }
+  }
+  if (!found) log.push({ date: today, totalAmount: total });
+  log.sort(function(a, b) { return a.date < b.date ? -1 : 1; });
+  log = log.slice(-365);
+  return {
+    nick: String(nick || ''),
+    positions: pos,
+    totalAmount: total,
+    amountLog: log,
+    updated: nowIso || new Date().toISOString()
+  };
+}
+
+/* ==================== CSV 解析（浏览器本地完成） ==================== */
+
+// 单行解析(支持带引号字段,引号内可含逗号,转义双引号 "")
+function parseCSVLine(line) {
+  var fields = [];
+  var cur = '';
+  var inQuotes = false;
+  for (var i = 0; i < line.length; i++) {
+    var ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; }
+        else { inQuotes = false; }
+      } else { cur += ch; }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { fields.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+  }
+  fields.push(cur);
+  return fields;
+}
+
+// 解析整份 CSV → { ok, users:[{code,nick,funds:[{code,amount,profit}]}], errors:[], warnings:[] }
+// 新格式：校验码,称呼,基金代码,持有金额,持有收益（6 位校验码，金额/收益直填）
+function parseCSV(text) {
+  var errors = [];
+  var warnings = [];
+  var users = [];           // [{code, nick, funds:[{code,amount,profit}]}]
+  var userMap = {};         // code -> users 下标
+  var fundMap = {};         // code -> { fundCode -> true }
+
+  if (typeof text !== 'string' || text.replace(/\s/g, '') === '') {
+    return { ok: false, fatal: 'CSV 内容为空' };
+  }
+
+  text = text.replace(/^\uFEFF/, '');
+  var lines = text.split(/\r\n|\r|\n/);
+  // 去掉尾部空行
+  while (lines.length > 0 && lines[lines.length - 1].trim() === '') lines.pop();
+
+  if (lines.length === 0) {
+    return { ok: false, fatal: 'CSV 内容为空' };
+  }
+
+  // 表头
+  var header = parseCSVLine(lines[0]).map(function(f) { return f.trim(); });
+  if (header.length < 5) {
+    return { ok: false, fatal: '表头至少需要 5 列（校验码,称呼,基金代码,持有金额,持有收益），当前 ' + header.length + ' 列' };
+  }
+  // 旧格式（份额 + 成本单价/成本金额）→ 明确升级指引
+  var h4 = header[3] || '';
+  var h5 = header[4] || '';
+  if (h4.indexOf('份额') >= 0 || h5.indexOf('单价') >= 0 || h5.indexOf('成本') >= 0) {
+    return { ok: false, fatal: 'CSV 格式已升级：请改用新表头「校验码,称呼,基金代码,持有金额,持有收益」（持有金额与持有收益直接填写，不再使用份额/成本列）' };
+  }
+  var expectHeader = ['校验码', '称呼', '基金代码', '持有金额', '持有收益'];
+  for (var hi = 0; hi < 5; hi++) {
+    if (header[hi].indexOf(expectHeader[hi]) < 0) {
+      warnings.push({ line: 1, msg: '表头第 ' + (hi + 1) + ' 列建议为「' + expectHeader[hi] + '」，当前为「' + (header[hi] || '(空)') + '」' });
+    }
+  }
+
+  if (lines.length < 2) {
+    return { ok: false, fatal: 'CSV 没有数据行' };
+  }
+
+  for (var li = 1; li < lines.length; li++) {
+    var raw = lines[li];
+    if (raw.trim() === '') continue;
+    var lineNo = li + 1;
+    var cols = parseCSVLine(raw).map(function(f) { return f.trim(); });
+
+    if (cols.length < 5) {
+      errors.push({ line: lineNo, raw: raw, msg: '列数不足（需 5 列，当前 ' + cols.length + ' 列）' });
+      continue;
+    }
+
+    var code = cols[0].toUpperCase();   // 校验码统一大写（不区分大小写）
+    var nick = cols[1];
+    var fundCode = cols[2];
+    var amount = parseFloat(cols[3]);
+    var profit = parseFloat(cols[4]);
+
+    if (!/^[A-Za-z0-9]{6}$/.test(code)) {
+      errors.push({ line: lineNo, raw: raw, msg: '校验码「' + cols[0] + '」非法（须为 6 位字母/数字，不区分大小写）' });
+      continue;
+    }
+    if (nick.length > 32) {
+      errors.push({ line: lineNo, raw: raw, msg: '称呼过长（最多 32 字）' });
+      continue;
+    }
+    if (!/^\d{6}$/.test(fundCode)) {
+      errors.push({ line: lineNo, raw: raw, msg: '基金代码「' + fundCode + '」非法（须为 6 位数字）' });
+      continue;
+    }
+    if (!isFiniteNum(amount) || amount < 0) {
+      errors.push({ line: lineNo, raw: raw, msg: '持有金额「' + cols[3] + '」非法（须为非负数字）' });
+      continue;
+    }
+    if (!isFiniteNum(profit)) {
+      errors.push({ line: lineNo, raw: raw, msg: '持有收益「' + cols[4] + '」非法（须为数字，可为负）' });
+      continue;
+    }
+
+    var fund = {
+      code: fundCode,
+      amount: Math.round(amount * 100) / 100,
+      profit: Math.round(profit * 100) / 100
+    };
+
+    // 同一校验码多行 → 合并
+    var ui = userMap[code];
+    if (ui === undefined) {
+      users.push({ code: code, nick: nick, funds: [fund] });
+      userMap[code] = users.length - 1;
+      fundMap[code] = {};
+      fundMap[code][fundCode] = true;
+    } else {
+      if (users[ui].nick !== nick) {
+        warnings.push({ line: lineNo, msg: '校验码 ' + code + ' 的称呼不一致（' + users[ui].nick + ' / ' + nick + '），以先出现者为准' });
+      }
+      if (fundMap[code][fundCode]) {
+        errors.push({ line: lineNo, raw: raw, msg: '校验码 ' + code + ' 下基金 ' + fundCode + ' 重复' });
+        continue;
+      }
+      users[ui].funds.push(fund);
+      fundMap[code][fundCode] = true;
+    }
+  }
+
+  if (users.length === 0 && errors.length === 0) {
+    return { ok: false, fatal: 'CSV 没有有效数据行' };
+  }
+
+  return { ok: true, users: users, errors: errors, warnings: warnings };
+}
+
+/* ==================== ① 登录（Firebase Auth 邮箱密码） ==================== */
+
+// Auth 错误码 → 中文提示
+function authErrMsg(e) {
+  var code = (e && e.code) || '';
+  var map = {
+    'auth/invalid-email': '邮箱格式不正确',
+    'auth/user-not-found': '邮箱或密码错误',
+    'auth/wrong-password': '邮箱或密码错误',
+    'auth/invalid-credential': '邮箱或密码错误',
+    'auth/too-many-requests': '尝试过于频繁，请稍后再试',
+    'auth/network-request-failed': '网络异常，请检查网络后重试',
+    'auth/operation-not-allowed': 'Firebase 控制台未启用「邮箱/密码」登录方式',
+    'auth/unauthorized-domain': '当前域名未加入 Firebase 授权域名（见 DEPLOY.md）',
+    'auth/invalid-api-key': 'firebase-config.js 中的 apiKey 无效，请核对'
+  };
+  return map[code] || (e && e.message) || '登录失败';
+}
+
+function doAdminLogin() {
+  var email = ($('adminEmail').value || '').trim();
+  var pwd = $('adminPwd').value;
+  if (!email) { $('adminLoginErr').textContent = '请输入管理员邮箱'; return; }
+  if (!pwd) { $('adminLoginErr').textContent = '请输入密码'; return; }
+  $('adminLoginErr').textContent = '';
+  $('adminLoginBtn').disabled = true;
+  $('adminLoginBtn').textContent = '登录中...';
+  firebase.auth().signInWithEmailAndPassword(email, pwd).then(function(userCred) {
+    var user = userCred.user;
+    // 邮箱核对：仅允许 firebase-config.js 中配置的管理员邮箱
+    if (typeof ADMIN_EMAIL !== 'undefined' && String(ADMIN_EMAIL).indexOf('在此粘贴') < 0
+        && user.email !== ADMIN_EMAIL) {
+      firebase.auth().signOut();
+      throw { code: 'not-admin', email: user.email };
+    }
+    // 登录成功 → onAuthStateChanged 负责切换视图
+  }).catch(function(e) {
+    if (e && e.code === 'not-admin') {
+      $('adminLoginErr').textContent = '此账号（' + (e.email || '') + '）不是管理员账号，请核对 firebase-config.js 中的 ADMIN_EMAIL';
+    } else {
+      $('adminLoginErr').textContent = authErrMsg(e);
+    }
+  }).then(function() {
+    $('adminLoginBtn').disabled = false;
+    $('adminLoginBtn').textContent = '登 录';
+  });
+}
+
+// 会话状态：已登录直接进工作区（浏览器本会话记住登录态，刷新免重输）
+function initAuth() {
+  if (!isConfigured()) {
+    $('adminLoginErr').textContent = '尚未配置 Firebase：请按 DEPLOY.md 填写 firebase-config.js 后重新部署';
+    $('adminLoginBtn').disabled = true;
+    return;
+  }
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.firestore();
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      var isAdminEmail = (typeof ADMIN_EMAIL !== 'undefined' && String(ADMIN_EMAIL).indexOf('在此粘贴') < 0)
+        ? (user.email === ADMIN_EMAIL)
+        : true;  // 未配置 ADMIN_EMAIL 时不做客户端拦截，交由 Firestore 规则把关
+      if (!isAdminEmail) { firebase.auth().signOut(); return; }
+      $('loginCard').style.display = 'none';
+      $('workspace').style.display = 'block';
+      $('exitBtn').style.display = 'inline-flex';
+      startLive();
+    } else {
+      $('loginCard').style.display = 'block';
+      $('workspace').style.display = 'none';
+      $('exitBtn').style.display = 'none';
+      $('adminPwd').value = '';
+    }
+  });
+}
+
+// Firestore 权限错误统一提示（规则未发布 / 邮箱与规则不一致时出现）
+function fsErr(e) {
+  var msg = (e && e.code === 'permission-denied')
+    ? 'Firestore 拒绝访问：请确认已发布 firestore.rules，且规则中的管理员邮箱与登录邮箱一致'
+    : ((e && e.message) || '操作失败');
+  return msg;
+}
+
+/* ==================== ② 线上持仓实时编辑 ==================== */
+
+function findUser(code) {
+  for (var i = 0; i < live.users.length; i++) {
+    if (live.users[i].code === code) return live.users[i];
+  }
+  return null;
+}
+
+// onSnapshot：实时拉取线上数据（含 admin 本页与其他端的所有写入）
+function onLiveSnap(snap) {
+  var users = [];
+  snap.forEach(function(doc) {
+    if (doc.id === PROBE_CODE) return;  // 探测文档不属于任何用户
+    var d = doc.data() || {};
+    users.push({
+      code: doc.id,
+      nick: d.nick || '',
+      positions: (Array.isArray(d.positions) ? d.positions : []).map(function(p) {
+        p = p || {};
+        return { code: String(p.code || ''), amount: +p.amount || 0, profit: +p.profit || 0 };
+      }),
+      totalAmount: +d.totalAmount || 0,
+      amountLog: Array.isArray(d.amountLog) ? d.amountLog : [],
+      updated: d.updated || ''
+    });
+  });
+  users.sort(function(a, b) {
+    return String(a.nick || a.code).localeCompare(String(b.nick || b.code), 'zh-CN');
+  });
+  live.users = users;
+  var json = JSON.stringify(users);
+  if (json === live.lastJson) return;  // 无变化不重绘
+  live.lastJson = json;
+  if (live.formOpen) { live.dirty = true; return; }  // 表单打开中：延后重绘，避免输入被打断
+  renderLive();
+}
+
+function startLive() {
+  if (live.on) return;
+  live.on = true;
+  $('liveDot').classList.add('on');
+  $('liveBody').innerHTML = '<div class="loading">连接 Firestore...</div>';
+  db.collection(COLLECTION).onSnapshot(onLiveSnap, function(err) {
+    $('liveDot').classList.remove('on');
+    $('liveBody').innerHTML = '<p class="err">' + esc(fsErr(err)) + '</p>';
+  });
+}
+
+// 近 30 天金额走势迷你折线（来自 amountLog 按天记录）
+function sparkline(log) {
+  var pts = [];
+  (log || []).forEach(function(d) { if (d && d.date) pts.push(+d.totalAmount || 0); });
+  pts = pts.slice(-30);
+  if (pts.length < 2) return '';
+  var min = Math.min.apply(null, pts);
+  var max = Math.max.apply(null, pts);
+  var range = max - min || 1;
+  var w = 72, h = 20;
+  var path = '';
+  for (var i = 0; i < pts.length; i++) {
+    var x = (i / (pts.length - 1)) * w;
+    var y = h - ((pts[i] - min) / range) * (h - 2) - 1;
+    path += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+  }
+  var up = pts[pts.length - 1] >= pts[0];
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" title="近30日金额走势">' +
+    '<path d="' + path + '" fill="none" stroke="' + (up ? 'var(--up)' : 'var(--down)') + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+function renderLive() {
+  var body = $('liveBody');
+  if (!live.on) { body.innerHTML = ''; return; }
+  if (live.users.length === 0) {
+    body.innerHTML = '<p class="hint" style="margin:6px 0 0">还没有任何用户：点上方「+ 新建用户」，或在下方导入 CSV 一键创建</p>';
+    return;
+  }
+  var html = '';
+  live.users.forEach(function(u) {
+    var total = 0, profitSum = 0;
+    u.positions.forEach(function(p) { total += p.amount; profitSum += p.profit; });
+    total = Math.round(total * 100) / 100;
+    profitSum = Math.round(profitSum * 100) / 100;
+
+    var collapsed = live.collapsed[u.code] !== false;
+    html += '<div class="user-block' + (collapsed ? ' collapsed' : '') + '" data-code="' + esc(u.code) + '">';
+    html += '<div class="user-head">';
+    html += '<div class="user-title"><button class="toggle-btn" data-act="toggle" title="展开/收起持仓">' + (collapsed ? '▸' : '▾') + '</button><span class="u-nick">' + esc(u.nick || u.code) + '</span>' +
+      '<code class="inline">' + esc(u.code) + '</code>' +
+      '<span class="u-count">' + u.positions.length + ' 只基金</span></div>';
+    html += '<div class="user-amt"><span class="u-total">' + fmtMoney(total) + '</span>' +
+      '<span class="u-pnl ' + (profitSum >= 0 ? 'pos' : 'neg') + '">' + fmtSigned(profitSum) + '</span>' +
+      sparkline(u.amountLog) + '</div>';
+    html += '</div>';
+    html += '<div class="fund-rows">';
+    u.positions.forEach(function(p) {
+      var nameTxt = (live.nameCache[p.code] !== undefined)
+        ? (live.nameCache[p.code] || '（未识别）')
+        : '加载中…';
+      html += '<div class="fund-row" data-fund="' + esc(p.code) + '">' +
+        '<div class="fund-main"><span class="f-code">' + esc(p.code) + '</span>' +
+        '<span class="f-name muted" data-name="' + esc(p.code) + '">' + esc(nameTxt) + '</span></div>' +
+        '<div class="fund-nums"><span class="f-amt">' + fmtMoney(p.amount) + '</span>' +
+        '<span class="f-pnl ' + (p.profit >= 0 ? 'pos' : 'neg') + '">' + fmtSigned(p.profit) + '</span></div>' +
+        '<div class="fund-ops">' +
+        '<button class="btn secondary tiny" data-act="edit">改</button>' +
+        '<button class="btn secondary tiny danger" data-act="del">删</button>' +
+        '</div></div>';
+    });
+    if (u.positions.length === 0) {
+      html += '<div class="fund-empty muted">暂无持仓，点下方「+ 添加基金」</div>';
+    }
+    html += '</div>';
+    html += '<div class="user-foot">' +
+      '<button class="btn secondary tiny" data-act="addfund">+ 添加基金</button>' +
+      '<button class="btn secondary tiny" data-act="edituser">编辑用户</button>' +
+      '<span class="u-upd muted">' + (u.updated ? '更新于 ' + esc(fmtTime(u.updated)) : '') + '</span>' +
+      '<button class="btn secondary tiny danger" data-act="deluser">删除用户</button>' +
+      '</div>';
+    html += '</div>';
+  });
+  body.innerHTML = html;
+  fetchMissingNames();
+}
+
+// 基金名称：仅对未见过的代码发起查询（结果缓存，重绘不重复请求）
+function fetchMissingNames() {
+  live.users.forEach(function(u) {
+    u.positions.forEach(function(p) {
+      var code = p.code;
+      if (!code || live.nameCache[code] !== undefined || namePending[code]) return;
+      namePending[code] = true;
+      fetchFundName(code).then(function(name) {
+        namePending[code] = false;
+        live.nameCache[code] = name || null;
+        var cells = document.querySelectorAll('[data-name="' + code + '"]');
+        for (var i = 0; i < cells.length; i++) {
+          cells[i].textContent = name || '（未识别）';
+        }
+      });
+    });
+  });
+}
+
+// pingzhongdata JSONP 查基金名称（与主应用 fetchQuotes 同一数据源）
+function fetchFundName(code) {
+  return new Promise(function(resolve) {
+    var s = document.createElement('script');
+    var settled = false;
+    var globals = ['fS_name','fS_code','Data_netWorthTrend','Data_grandTotalTrend','Data_fundSharesPositions','ishb','fund_sourceRate','fund_Rate','fund_minsg','stockCodes','zqCodes','stockCodesNew','zqCodesNew','syl_1n','syl_6y','syl_3y','syl_1y','Data_rateInSimilarType','Data_rateInSimilarPersent','Data_performanceEvaluation'];
+    function cleanup() {
+      globals.forEach(function(v) { try { delete window[v]; } catch(e) { window[v] = undefined; } });
+      if (s.parentNode) s.parentNode.removeChild(s);
+    }
+    var timer = setTimeout(function() {
+      if (!settled) { settled = true; cleanup(); resolve(null); }
+    }, 12000);
+    s.onload = function() {
+      if (settled) return; settled = true; clearTimeout(timer);
+      var name = window.fS_name || '';
+      cleanup();
+      resolve(name || null);
+    };
+    s.onerror = function() {
+      if (settled) return; settled = true; clearTimeout(timer);
+      cleanup(); resolve(null);
+    };
+    s.src = 'https://fund.eastmoney.com/pingzhongdata/' + code + '.js';
+    document.body.appendChild(s);
+  });
+}
+
+/* ---------- 内联表单（修改 / 添加基金 / 新建用户） ---------- */
+
+// 关闭全部内联表单（不触发重绘）
+function closeInlineForms() {
+  var forms = document.querySelectorAll('.edit-form');
+  Array.prototype.slice.call(forms).forEach(function(f) {
+    if (f.id !== 'newUserForm') f.remove();
+  });
+  var nu = $('newUserForm');
+  if (nu) nu.style.display = 'none';
+  live.editing = null;
+  live.adding = null;
+  live.formOpen = false;
+}
+
+// 关闭表单后统一结算：期间有远端更新则重绘
+function settleForms() {
+  closeInlineForms();
+  if (live.dirty) { live.dirty = false; renderLive(); }
+}
+
+// 写回用户文档（positions 变化 → 重算 totalAmount、按天 upsert amountLog、刷新 updated）
+function updateUserPositions(code, mutator) {
+  var u = findUser(code);
+  if (!u) return false;
+  var positions = u.positions.map(function(p) {
+    return { code: p.code, amount: p.amount, profit: p.profit };
+  });
+  positions = mutator(positions);
+  if (!positions) return false;
+  var doc = buildUserDoc(u.nick, positions, u);
+  db.collection(COLLECTION).doc(code).set(doc).then(function() {
+    toast('已保存');
+  }).catch(function(e) { alert(fsErr(e)); });
+  return true;
+}
+
+// 修改单只基金（持有金额 / 持有收益）
+function openEditForm(code, fund) {
+  settleForms();
+  var u = findUser(code);
+  if (!u) return;
+  var p = null;
+  for (var i = 0; i < u.positions.length; i++) {
+    if (u.positions[i].code === fund) { p = u.positions[i]; break; }
+  }
+  if (!p) return;
+  var block = document.querySelector('.user-block[data-code="' + code + '"]');
+  if (!block) return;
+  var row = block.querySelector('.fund-row[data-fund="' + fund + '"]');
+  if (!row) return;
+  var form = document.createElement('div');
+  form.className = 'edit-form';
+  form.innerHTML =
+    '<div class="edit-grid">' +
+      '<div class="field"><label>持有金额（当前市值，非负）</label>' +
+      '<input type="text" inputmode="decimal" class="e-amt" value="' + p.amount + '"></div>' +
+      '<div class="field"><label>持有收益（累计盈亏，可为负）</label>' +
+      '<input type="text" inputmode="decimal" class="e-pnl" value="' + p.profit + '"></div>' +
+    '</div>' +
+    '<div class="actions-row">' +
+      '<button class="btn sm act-save">保存</button>' +
+      '<button class="btn secondary sm act-cancel">取消</button>' +
+    '</div>';
+  // 作为整行块插入到该基金行之后（避免被 .fund-row 的 flex 布局挤压）
+  var rows = block.querySelector('.fund-rows');
+  if (rows) rows.insertBefore(form, row.nextSibling);
+  else block.appendChild(form);
+  live.editing = { code: code, fund: fund };
+  live.formOpen = true;
+  var amtInput = form.querySelector('.e-amt');
+  if (amtInput && amtInput.focus) amtInput.focus();
+
+  form.querySelector('.act-save').addEventListener('click', function() {
+    var ed = live.editing;
+    if (!ed) return;
+    var amt = parseFloat(form.querySelector('.e-amt').value);
+    var pnl = parseFloat(form.querySelector('.e-pnl').value);
+    if (!isFiniteNum(amt) || amt < 0) { alert('持有金额须为非负数字'); return; }
+    if (!isFiniteNum(pnl)) { alert('持有收益须为数字（可为负）'); return; }
+    updateUserPositions(ed.code, function(positions) {
+      for (var i = 0; i < positions.length; i++) {
+        if (positions[i].code === ed.fund) {
+          positions[i].amount = Math.round(amt * 100) / 100;
+          positions[i].profit = Math.round(pnl * 100) / 100;
+          break;
+        }
+      }
+      return positions;
+    });
+    settleForms();
+  });
+  form.querySelector('.act-cancel').addEventListener('click', function() {
+    settleForms();
+  });
+}
+
+// 为某用户添加一只基金
+function openAddFundForm(code) {
+  settleForms();
+  var block = document.querySelector('.user-block[data-code="' + code + '"]');
+  if (!block) return;
+  if (block.classList.contains('collapsed')) {
+    block.classList.remove('collapsed');
+    live.collapsed[code] = false;
+  }
+  var rows = block.querySelector('.fund-rows');
+  if (!rows) return;
+  var form = document.createElement('div');
+  form.className = 'edit-form';
+  form.innerHTML =
+    '<div class="field"><label>基金代码（6 位数字）</label>' +
+    '<input type="text" inputmode="numeric" class="a-code" maxlength="6" placeholder="如 005827"></div>' +
+    '<div class="edit-grid">' +
+      '<div class="field"><label>持有金额（非负）</label>' +
+      '<input type="text" inputmode="decimal" class="a-amt" placeholder="0.00"></div>' +
+      '<div class="field"><label>持有收益（可为负）</label>' +
+      '<input type="text" inputmode="decimal" class="a-pnl" placeholder="0.00"></div>' +
+    '</div>' +
+    '<div class="actions-row">' +
+      '<button class="btn sm act-save">添加</button>' +
+      '<button class="btn secondary sm act-cancel">取消</button>' +
+    '</div>';
+  rows.appendChild(form);
+  live.adding = code;
+  live.formOpen = true;
+  var codeInput = form.querySelector('.a-code');
+  if (codeInput && codeInput.focus) codeInput.focus();
+
+  form.querySelector('.act-save').addEventListener('click', function() {
+    var uc = live.adding;
+    if (!uc) return;
+    var fcode = (form.querySelector('.a-code').value || '').trim();
+    var amt = parseFloat(form.querySelector('.a-amt').value);
+    var pnl = parseFloat(form.querySelector('.a-pnl').value);
+    var u = findUser(uc);
+    if (!u) return;
+    if (!/^\d{6}$/.test(fcode)) { alert('基金代码须为 6 位数字'); return; }
+    for (var i = 0; i < u.positions.length; i++) {
+      if (u.positions[i].code === fcode) { alert('该用户已有基金 ' + fcode); return; }
+    }
+    if (!isFiniteNum(amt) || amt < 0) { alert('持有金额须为非负数字'); return; }
+    if (!isFiniteNum(pnl)) { alert('持有收益须为数字（可为负）'); return; }
+    updateUserPositions(uc, function(positions) {
+      positions.push({ code: fcode, amount: Math.round(amt * 100) / 100, profit: Math.round(pnl * 100) / 100 });
+      return positions;
+    });
+    settleForms();
+  });
+  form.querySelector('.act-cancel').addEventListener('click', function() {
+    settleForms();
+  });
+}
+
+// 删除某用户的一只基金
+function deleteFund(code, fund) {
+  var u = findUser(code);
+  if (!u) return;
+  if (!confirm('确定删除「' + (u.nick || code) + '」的基金 ' + fund + '？')) return;
+  updateUserPositions(code, function(positions) {
+    return positions.filter(function(p) { return p.code !== fund; });
+  });
+  settleForms();
+}
+
+// 删除整个用户（含全部持仓与金额历史，需二次确认）
+function deleteUser(code) {
+  var u = findUser(code);
+  if (!u) return;
+  if (!confirm('确定删除用户「' + (u.nick || code) + '」（' + code + '）？\n其全部持仓与金额历史将被清除，该用户下次打开将提示校验码无效。')) return;
+  db.collection(COLLECTION).doc(code).delete().then(function() {
+    toast('用户已删除');
+  }).catch(function(e) { alert(fsErr(e)); });
+}
+
+// 新建用户（创建后可在其卡片中继续添加基金）
+function toggleNewUserForm(show) {
+  var form = $('newUserForm');
+  if (!form) return;
+  if (show) {
+    settleForms();
+    form.style.display = 'block';
+    live.formOpen = true;
+    $('nuCode').value = '';
+    $('nuNick').value = '';
+    if ($('nuCode').focus) $('nuCode').focus();
+  } else {
+    form.style.display = 'none';
+    live.formOpen = false;
+    if (live.dirty) { live.dirty = false; renderLive(); }
+  }
+}
+
+function createUser() {
+  var code = ($('nuCode').value || '').trim().toUpperCase();
+  var nick = ($('nuNick').value || '').trim();
+  if (!/^[A-Za-z0-9]{6}$/.test(code)) { alert('校验码须为 6 位字母/数字'); return; }
+  if (!nick) { alert('请填写称呼'); return; }
+  if (nick.length > 32) { alert('称呼最多 32 字'); return; }
+  if (findUser(code)) { alert('校验码 ' + code + ' 已存在'); return; }
+  var doc = buildUserDoc(nick, [], null);
+  db.collection(COLLECTION).doc(code).set(doc).then(function() {
+    toast('用户 ' + nick + '（' + code + '）已创建');
+    toggleNewUserForm(false);
+  }).catch(function(e) { alert(fsErr(e)); });
+}
+
+/* ---------- 持仓展开/收起 ---------- */
+function toggleUser(code) {
+  var block = document.querySelector('.user-block[data-code="' + code + '"]');
+  if (!block) return;
+  var nowCollapsed = block.classList.toggle('collapsed');
+  live.collapsed[code] = nowCollapsed;
+  var btn = block.querySelector('.toggle-btn');
+  if (btn) btn.textContent = nowCollapsed ? '▸' : '▾';
+}
+
+/* ---------- 编辑用户（昵称 + 校验码） ---------- */
+function openEditUserForm(code) {
+  settleForms();
+  var u = findUser(code);
+  if (!u) return;
+  var block = document.querySelector('.user-block[data-code="' + code + '"]');
+  if (!block) return;
+  var form = document.createElement('div');
+  form.className = 'edit-form user-edit-form';
+  form.innerHTML =
+    '<div class="edit-grid">' +
+      '<div class="field"><label>称呼（最多 32 字）</label>' +
+      '<input type="text" class="eu-nick" maxlength="32" value="' + esc(u.nick) + '"></div>' +
+      '<div class="field"><label>校验码（6 位字母/数字，修改后生成新账户）</label>' +
+      '<input type="text" class="eu-code" maxlength="6" value="' + esc(u.code) + '"></div>' +
+    '</div>' +
+    '<div class="actions-row">' +
+      '<button class="btn sm act-save">保存</button>' +
+      '<button class="btn secondary sm act-cancel">取消</button>' +
+    '</div>';
+  var rows = block.querySelector('.fund-rows');
+  if (rows) block.insertBefore(form, rows);
+  else block.appendChild(form);
+  live.formOpen = true;
+  var nickInput = form.querySelector('.eu-nick');
+  if (nickInput && nickInput.focus) nickInput.focus();
+
+  form.querySelector('.act-save').addEventListener('click', function() {
+    var nu = (form.querySelector('.eu-nick').value || '').trim();
+    var nc = (form.querySelector('.eu-code').value || '').trim().toUpperCase();
+    if (!nu) { alert('请填写称呼'); return; }
+    if (nu.length > 32) { alert('称呼最多 32 字'); return; }
+    if (!/^[A-Za-z0-9]{6}$/.test(nc)) { alert('校验码须为 6 位字母/数字'); return; }
+    if (nc !== code && findUser(nc)) { alert('校验码 ' + nc + ' 已存在，请换一个'); return; }
+    if (nc === code) {
+      var doc = buildUserDoc(nu, u.positions, u);
+      db.collection(COLLECTION).doc(code).set(doc).then(function() { toast('已更新'); settleForms(); })
+        .catch(function(e) { alert(fsErr(e)); });
+    } else {
+      var newDoc = buildUserDoc(nu, u.positions, u);
+      var batch = db.batch();
+      batch.set(db.collection(COLLECTION).doc(nc), newDoc);
+      batch.delete(db.collection(COLLECTION).doc(code));
+      batch.commit().then(function() { toast('校验码已更新为 ' + nc); settleForms(); })
+        .catch(function(e) { alert(fsErr(e)); });
+    }
+  });
+  form.querySelector('.act-cancel').addEventListener('click', function() { settleForms(); });
+}
+
+/* ---------- CSV 导出（与导入同格式） ---------- */
+function csvEscape(v) {
+  v = (v === null || v === undefined) ? '' : String(v);
+  if (/[",\r\n]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+function exportCSV() {
+  if (!live.on) { alert('尚未连接线上数据，无法导出'); return; }
+  if (!live.users.length) { alert('当前没有任何用户，无法导出'); return; }
+  var lines = ['校验码,称呼,基金代码,持有金额,持有收益'];
+  var skipped = 0;
+  live.users.forEach(function(u) {
+    if (!u.positions || !u.positions.length) { skipped++; return; }
+    u.positions.forEach(function(p) {
+      lines.push([
+        u.code, csvEscape(u.nick), p.code,
+        (Math.round((+p.amount || 0) * 100) / 100).toFixed(2),
+        (Math.round((+p.profit || 0) * 100) / 100).toFixed(2)
+      ].map(csvEscape).join(','));
+    });
+  });
+  var csv = '﻿' + lines.join('\r\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '基金账本导出_' + localDateStr() + '.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('已导出 ' + (lines.length - 1) + ' 行' + (skipped ? '（跳过 ' + skipped + ' 个无持仓用户）' : ''));
+}
+
+/* ==================== ③ CSV 导入 ==================== */
+function readCSVFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var buf = ev.target.result;
+    var text;
+    try {
+      text = new TextDecoder('utf-8', { fatal: true }).decode(buf);
+      $('fileInfo').textContent = file.name + '（UTF-8）';
+    } catch (e) {
+      try {
+        text = new TextDecoder('gbk').decode(buf);
+        $('fileInfo').textContent = file.name + '（GBK 已自动转换）';
+      } catch (e2) {
+        text = new TextDecoder('utf-8').decode(buf);
+        $('fileInfo').textContent = file.name;
+      }
+    }
+    text = text.replace(/^\uFEFF/, '');
+    $('csvText').value = text;
+    updateCsvStats();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function updateCsvStats() {
+  state.csv = $('csvText').value;
+  var lines = state.csv ? state.csv.split(/\r\n|\r|\n/).filter(function(l) { return l.trim() !== ''; }).length : 0;
+  var kb = Math.round(new TextEncoder().encode(state.csv).length / 1024);
+  var info = lines > 0 ? lines + ' 行 · ' + kb + ' KB' : '';
+  if (kb > 880) info += ' · ⚠️ 接近 900KB 上限';
+  $('fileInfo').textContent = info;
+}
+
+function downloadTemplate() {
+  var csv = '校验码,称呼,基金代码,持有金额,持有收益\n' +
+            'A1B2C3,老王,005827,12000.00,1850.50\n' +
+            'A1B2C3,老王,161725,8000.00,-320.10\n' +
+            'K9M8N7,小李,110022,5000.00,260.00\n';
+  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '基金账本模板.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ==================== ④ 解析预览（本地解析，不请求服务器） ==================== */
+function doPreview() {
+  var csv = $('csvText').value;
+  if (!csv.trim()) { alert('请先粘贴 CSV 内容或选择文件'); return; }
+  state.csv = csv;
+  $('previewCard').style.display = 'block';
+  $('syncCard').style.display = 'none';
+  $('previewStats').innerHTML = '';
+  $('previewBody').innerHTML = '<div class="loading">解析中...</div>';
+  $('previewHint').textContent = '';
+
+  var csvBytes = new TextEncoder().encode(csv).length;
+  if (csvBytes > MAX_CSV_BYTES) {
+    $('previewBody').innerHTML = '<p class="err">CSV 过大（' + Math.round(csvBytes / 1024) + 'KB，上限 900KB），请拆分或精简</p>';
+    return;
+  }
+
+  // 立即本地解析
+  var parsed = parseCSV(csv);
+  if (!parsed.ok) {
+    $('previewBody').innerHTML = '<p class="err">' + esc(parsed.fatal || '解析失败') + '</p>';
+    return;
+  }
+  var userCount = parsed.users.length;
+  var positionCount = 0;
+  parsed.users.forEach(function(u) { positionCount += u.funds.length; });
+  var body = {
+    stats: { userCount: userCount, positionCount: positionCount, errorCount: parsed.errors.length, warningCount: parsed.warnings.length },
+    users: parsed.users,
+    errors: parsed.errors,
+    warnings: parsed.warnings
+  };
+  state.preview = body;
+  renderPreview(body);
+}
+
+function renderPreview(p) {
+  var s = p.stats;
+  $('previewStats').innerHTML =
+    '<div class="stat"><div class="v">' + s.userCount + '</div><div class="l">用户</div></div>' +
+    '<div class="stat"><div class="v">' + s.positionCount + '</div><div class="l">持仓行</div></div>' +
+    '<div class="stat' + (s.errorCount > 0 ? ' warn' : '') + '"><div class="v">' + s.errorCount + '</div><div class="l">错误</div></div>' +
+    '<div class="stat"><div class="v">' + s.warningCount + '</div><div class="l">警告</div></div>';
+
+  var html = '';
+  // 错误列表
+  if (p.errors && p.errors.length > 0) {
+    html += '<h2 style="font-size:0.8rem;color:var(--up);margin:6px 0">错误（须修正后才能同步）</h2><ul class="error-list">';
+    p.errors.forEach(function(e) {
+      html += '<li>第 ' + e.line + ' 行：' + esc(e.msg) + '<br><span class="muted">' + esc(e.raw) + '</span></li>';
+    });
+    html += '</ul>';
+  }
+  // 警告列表
+  if (p.warnings && p.warnings.length > 0) {
+    html += '<div class="divider"></div><h2 style="font-size:0.8rem;color:var(--text-2);margin:6px 0">警告</h2><ul class="warn-list">';
+    p.warnings.forEach(function(w) {
+      html += '<li>' + esc(w.msg) + '</li>';
+    });
+    html += '</ul>';
+  }
+  // 用户表
+  if (p.users && p.users.length > 0) {
+    html += '<div class="divider"></div><div class="table-scroll"><table><thead><tr>' +
+      '<th>校验码</th><th>称呼</th><th>基金</th><th class="num">总金额</th><th class="num">总收益</th></tr></thead><tbody>';
+    p.users.forEach(function(u) {
+      var total = 0, profitSum = 0;
+      u.funds.forEach(function(f) { total += f.amount; profitSum += f.profit; });
+      html += '<tr class="user-row"><td><code class="inline">' + esc(u.code) + '</code></td><td>' + esc(u.nick) + '</td>' +
+        '<td>' + u.funds.length + ' 只</td><td class="num">' + fmtMoney(total) + '</td>' +
+        '<td class="num ' + (profitSum >= 0 ? 'pos' : 'neg') + '">' + fmtSigned(profitSum) + '</td></tr>';
+      html += '<tr><td colspan="5" style="padding:0"><table class="fund-subtable"><tbody>';
+      u.funds.forEach(function(f) {
+        html += '<tr><td data-fund="' + esc(f.code) + '">' + esc(f.code) + '</td>' +
+          '<td data-name="' + esc(f.code) + '" class="warn-txt">获取名称中...</td>' +
+          '<td class="num">' + fmtMoney(f.amount) + '</td>' +
+          '<td class="num ' + (f.profit >= 0 ? 'pos' : 'neg') + '">' + fmtSigned(f.profit) + '</td></tr>';
+      });
+      html += '</tbody></table></td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  $('previewBody').innerHTML = html;
+
+  // 同步卡片：有错误则禁用
+  $('syncCard').style.display = 'block';
+  var hasErr = p.errors && p.errors.length > 0;
+  $('syncBtn').disabled = hasErr;
+  $('syncBtn').textContent = hasErr ? '存在错误，无法同步' : '确认导入';
+  $('previewHint').textContent = hasErr
+    ? '请修正上方错误行后重新解析'
+    : '解析无误：点「确认导入」将弹出对比窗口，可逐用户选择覆盖或插入新增（校验码统一转为大写）';
+
+  // 客户端带出基金名称（与主应用同一数据源）
+  if (p.users && p.users.length > 0) {
+    var codes = [];
+    p.users.forEach(function(u) { u.funds.forEach(function(f) { if (codes.indexOf(f.code) < 0) codes.push(f.code); }); });
+    fillFundNames(codes);
+  }
+}
+
+// 预览表基金名称（JSONP 并发查询，回填 [data-name] 单元格）
+function fillFundNames(codes) {
+  var CONCURRENCY = 6;
+  var queue = codes.slice();
+  var active = 0;
+  function next() {
+    if (queue.length === 0 && active === 0) return;
+    while (active < CONCURRENCY && queue.length > 0) {
+      (function(code) {
+        active++;
+        var cached = live.nameCache[code];
+        if (cached !== undefined) {
+          active--;
+          var cells0 = document.querySelectorAll('[data-name="' + code + '"]');
+          for (var c = 0; c < cells0.length; c++) cells0[c].textContent = cached || '（未识别）';
+          next();
+          return;
+        }
+        fetchFundName(code).then(function(name) {
+          active--;
+          live.nameCache[code] = name || null;
+          var cells = document.querySelectorAll('[data-name="' + code + '"]');
+          for (var i = 0; i < cells.length; i++) {
+            cells[i].textContent = name || '（未识别）';
+          }
+          next();
+        });
+      })(queue.shift());
+    }
+  }
+  next();
+}
+
+/* ==================== ⑤ 同步（先对比弹窗，再按需写入） ==================== */
+
+// 计算 CSV 与线上文档的差异
+function computeDiff(parsed, oldDocs) {
+  var newUsers = [], changed = [], unchanged = [], removed = [];
+  var csvSet = {};
+  parsed.users.forEach(function(u) {
+    csvSet[u.code] = true;
+    var old = oldDocs[u.code];
+    if (!old) { newUsers.push(u); return; }
+    var oldMap = {};
+    (old.positions || []).forEach(function(p) { oldMap[String(p.code || '')] = (Math.round((+p.amount || 0) * 100) / 100) + '|' + (Math.round((+p.profit || 0) * 100) / 100); });
+    var same = (Object.keys(oldMap).length === u.funds.length);
+    u.funds.forEach(function(f) {
+      var k = (Math.round(f.amount * 100) / 100) + '|' + (Math.round(f.profit * 100) / 100);
+      if (oldMap[f.code] !== k) same = false;
+    });
+    if (same) unchanged.push({ code: u.code, nick: u.nick });
+    else changed.push({ code: u.code, nick: u.nick, funds: u.funds, old: old });
+  });
+  Object.keys(oldDocs).forEach(function(c) { if (!csvSet[c]) removed.push({ code: c, nick: oldDocs[c].nick || '' }); });
+  return { newUsers: newUsers, changed: changed, unchanged: unchanged, removed: removed };
+}
+
+// 合并：保留原持仓，CSV 同名基金覆盖，CSV 新增基金追加到末尾
+function mergePositions(oldPositions, csvFunds) {
+  var out = csvFunds.map(function(f) { return { code: f.code, amount: f.amount, profit: f.profit }; });
+  (oldPositions || []).forEach(function(p) {
+    var exists = false;
+    for (var i = 0; i < out.length; i++) { if (out[i].code === String(p.code || '')) { exists = true; break; } }
+    if (!exists) out.push({ code: String(p.code || ''), amount: +p.amount || 0, profit: +p.profit || 0 });
+  });
+  return out;
+}
+
+// 打开对比弹窗（先读取线上数据再比对）
+function openSyncModal() {
+  if (!state.preview) return;
+  var parsed = state.preview;
+  if (parsed.errors && parsed.errors.length > 0) { alert('存在解析错误，请修正后重新解析预览'); return; }
+  var btn = $('syncBtn');
+  btn.disabled = true; btn.textContent = '对比中...';
+  $('syncResult').innerHTML = '<div class="loading">正在读取线上数据以对比...</div>';
+  db.collection(COLLECTION).get().then(function(snap) {
+    var oldDocs = {};
+    snap.forEach(function(doc) { if (doc.id !== PROBE_CODE) oldDocs[doc.id] = doc.data() || {}; });
+    renderDiffModal(computeDiff(parsed, oldDocs), oldDocs, parsed);
+    btn.disabled = false; btn.textContent = '确认导入';
+  }).catch(function(e) {
+    $('syncResult').innerHTML = '<p class="err">' + esc(fsErr(e)) + '</p>';
+    btn.disabled = false; btn.textContent = '确认导入';
+  });
+}
+
+function closeModal() {
+  var m = document.querySelector('.modal-mask');
+  if (m) m.parentNode.removeChild(m);
+}
+
+// 渲染对比弹窗
+function renderDiffModal(diff, oldDocs, parsed) {
+  closeModal();
+  var html = '<div class="modal-mask"><div class="modal">' +
+    '<div class="modal-head"><div><h3>导入对比</h3><div class="sub">请为「已存在用户」选择处理方式</div></div>' +
+    '<button class="btn secondary sm" data-m="close">关闭</button></div>' +
+    '<div class="modal-body">';
+
+  html += '<div class="diff-sec"><h4>新增用户（' + diff.newUsers.length + '，将直接写入）</h4>';
+  if (!diff.newUsers.length) html += '<div class="muted" style="font-size:0.76rem">无</div>';
+  diff.newUsers.forEach(function(u) {
+    html += '<div class="diff-row"><span class="badge new">新增</span><span class="dn">' + esc(u.nick) + '</span><span class="dc">' + esc(u.code) + '</span><span class="muted">' + u.funds.length + ' 只基金</span></div>';
+  });
+  html += '</div>';
+
+  html += '<div class="diff-sec"><h4>已存在用户（' + (diff.changed.length + diff.unchanged.length) + '）</h4>';
+  if (!diff.changed.length && !diff.unchanged.length) html += '<div class="muted" style="font-size:0.76rem">无</div>';
+  diff.unchanged.forEach(function(u) {
+    html += '<div class="diff-row"><span class="badge unchanged">无变化</span><span class="dn">' + esc(u.nick) + '</span><span class="dc">' + esc(u.code) + '</span><span class="muted">将跳过</span></div>';
+  });
+  diff.changed.forEach(function(u) {
+    html += '<div class="diff-row"><span class="badge">覆盖/插入</span><span class="dn">' + esc(u.nick) + '</span><span class="dc">' + esc(u.code) + '</span>' +
+      '<span class="choice"><label><input type="radio" name="ch-' + esc(u.code) + '" value="overwrite" checked>覆盖</label>' +
+      '<label><input type="radio" name="ch-' + esc(u.code) + '" value="merge">插入新增</label></span></div>';
+  });
+  if (diff.changed.length) {
+    html += '<div style="font-size:0.72rem;margin-top:4px"><span class="quick" data-m="all-overwrite">全选覆盖</span>　<span class="quick" data-m="all-merge">全选插入新增</span></div>';
+  }
+  html += '</div>';
+
+  html += '<div class="diff-sec"><h4>线上多余校验码（' + diff.removed.length + '，CSV 中不存在）</h4>';
+  if (!diff.removed.length) html += '<div class="muted" style="font-size:0.76rem">无</div>';
+  diff.removed.forEach(function(u) {
+    html += '<div class="diff-row"><span class="badge remove">多余</span><span class="dn">' + esc(u.nick || u.code) + '</span><span class="dc">' + esc(u.code) + '</span>' +
+      '<span class="choice"><label><input type="radio" name="rm-' + esc(u.code) + '" value="keep" checked>保留</label>' +
+      '<label><input type="radio" name="rm-' + esc(u.code) + '" value="delete">删除</label></span></div>';
+  });
+  html += '</div>';
+
+  html += '</div><div class="modal-foot">' +
+    '<button class="btn secondary" data-m="close">取消</button>' +
+    '<button class="btn" data-m="confirm">确认导入</button></div></div>';
+
+  var holder = document.createElement('div');
+  holder.innerHTML = html;
+  document.body.appendChild(holder.firstChild);
+  var modalEl = document.querySelector('.modal-mask');
+
+  modalEl.addEventListener('click', function(e) {
+    var t = e.target;
+    if (t === modalEl) { closeModal(); return; }
+    var m = t.getAttribute && t.getAttribute('data-m');
+    if (!m) return;
+    if (m === 'close') closeModal();
+    else if (m === 'all-overwrite') modalEl.querySelectorAll('input[name^="ch-"][value="overwrite"]').forEach(function(r) { r.checked = true; });
+    else if (m === 'all-merge') modalEl.querySelectorAll('input[name^="ch-"][value="merge"]').forEach(function(r) { r.checked = true; });
+    else if (m === 'confirm') applySync(diff, oldDocs, parsed);
+  });
+}
+
+// 按弹窗选择写入
+function applySync(diff, oldDocs, parsed) {
+  // 先收集选择（弹窗即将关闭，须在此之前读取）
+  var choices = { changed: {}, removed: {} };
+  diff.changed.forEach(function(u) {
+    var r = document.querySelector('input[name="ch-' + esc(u.code) + '"]:checked');
+    choices.changed[u.code] = r ? r.value : 'overwrite';
+  });
+  diff.removed.forEach(function(u) {
+    var r = document.querySelector('input[name="rm-' + esc(u.code) + '"]:checked');
+    choices.removed[u.code] = r ? r.value : 'keep';
+  });
+  closeModal();
+
+  var btn = $('syncBtn');
+  btn.disabled = true; btn.textContent = '导入中...';
+  $('syncResult').innerHTML = '<div class="loading">正在写入 Firestore...</div>';
+  var now = new Date().toISOString();
+  var ops = [];
+  diff.newUsers.forEach(function(u) { ops.push({ type: 'set', code: u.code, data: buildUserDoc(u.nick, u.funds, null, now) }); });
+  diff.changed.forEach(function(u) {
+    if (choices.changed[u.code] === 'merge') {
+      ops.push({ type: 'set', code: u.code, data: buildUserDoc(u.nick, mergePositions(u.old.positions, u.funds), u.old, now) });
+    } else {
+      ops.push({ type: 'set', code: u.code, data: buildUserDoc(u.nick, u.funds, u.old, now) });
+    }
+  });
+  var delCodes = [];
+  diff.removed.forEach(function(u) {
+    if (choices.removed[u.code] === 'delete') { ops.push({ type: 'del', code: u.code }); delCodes.push(u.code); }
+  });
+
+  var batches = [];
+  for (var i = 0; i < ops.length; i += 400) batches.push(ops.slice(i, i + 400));
+  var p = Promise.resolve();
+  batches.forEach(function(batchOps) {
+    p = p.then(function() {
+      var batch = db.batch();
+      batchOps.forEach(function(op) {
+        var ref = db.collection(COLLECTION).doc(op.code);
+        if (op.type === 'set') batch.set(ref, op.data); else batch.delete(ref);
+      });
+      return batch.commit();
+    });
+  });
+  p.then(function() {
+    var uc = diff.newUsers.length + diff.changed.length;
+    var pc = 0;
+    diff.newUsers.forEach(function(u) { pc += u.funds.length; });
+    diff.changed.forEach(function(u) { pc += u.funds.length; });
+    var html = '<div class="result-panel">' +
+      '<div class="row"><span class="k">写入/更新用户</span><span class="v">' + uc + ' 人</span></div>' +
+      '<div class="row"><span class="k">写入持仓</span><span class="v">' + pc + ' 行</span></div>';
+    if (delCodes.length) html += '<div class="row"><span class="k">删除校验码</span><span class="v" style="color:var(--up)">' + delCodes.map(esc).join('、') + '</span></div>';
+    html += '<div class="row"><span class="k">更新时间</span><span class="v">' + esc(now) + '</span></div></div>' +
+      '<p class="ok-msg">✓ 导入成功，约 60 秒内对全部在线用户生效（上方线上持仓表已实时更新）</p>';
+    $('syncResult').innerHTML = html;
+    btn.disabled = false; btn.textContent = '确认导入';
+  }).catch(function(e) {
+    $('syncResult').innerHTML = '<p class="err">' + esc(fsErr(e)) + '</p>';
+    btn.disabled = false; btn.textContent = '确认导入';
+  });
+}
+
+/* ==================== 事件绑定 ==================== */
+$('adminLoginBtn').addEventListener('click', doAdminLogin);
+$('adminPwd').addEventListener('keydown', function(e) { if (e.key === 'Enter') doAdminLogin(); });
+$('adminEmail').addEventListener('keydown', function(e) { if (e.key === 'Enter') $('adminPwd').focus(); });
+
+$('chooseFileBtn').addEventListener('click', function() { $('csvFile').click(); });
+$('csvFile').addEventListener('change', function(e) {
+  if (e.target.files && e.target.files[0]) readCSVFile(e.target.files[0]);
+});
+$('tplBtn').addEventListener('click', downloadTemplate);
+$('csvText').addEventListener('input', updateCsvStats);
+
+// 预览入口：粘贴/选文件后点「解析预览」
+var previewBtn = document.createElement('button');
+previewBtn.className = 'btn block';
+previewBtn.id = 'previewBtn';
+previewBtn.textContent = '解析预览';
+previewBtn.style.marginTop = '12px';
+previewBtn.addEventListener('click', doPreview);
+var csvCard = document.getElementById('csvText').closest('.card');
+csvCard.appendChild(previewBtn);
+
+$('syncBtn').addEventListener('click', openSyncModal);
+$('exitBtn').addEventListener('click', function() {
+  firebase.auth().signOut().then(function() { location.reload(); });
+});
+
+// 新建用户
+$('newUserBtn').addEventListener('click', function() {
+  toggleNewUserForm($('newUserForm').style.display === 'none');
+});
+$('exportBtn').addEventListener('click', exportCSV);
+$('nuSave').addEventListener('click', createUser);
+$('nuCancel').addEventListener('click', function() { toggleNewUserForm(false); });
+$('nuCode').addEventListener('input', function() {
+  this.value = this.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+});
+$('nuCode').addEventListener('keydown', function(e) { if (e.key === 'Enter') createUser(); });
+$('nuNick').addEventListener('keydown', function(e) { if (e.key === 'Enter') createUser(); });
+
+// 线上持仓操作（事件委托：改 / 删 / 添加基金 / 删除用户）
+$('liveBody').addEventListener('click', function(e) {
+  var btnEl = e.target && e.target.closest ? e.target.closest('[data-act]') : null;
+  if (!btnEl || !$('liveBody').contains(btnEl)) return;
+  var act = btnEl.getAttribute('data-act');
+  var block = btnEl.closest('.user-block');
+  var row = btnEl.closest('.fund-row');
+  var code = block ? block.getAttribute('data-code') : '';
+  var fund = row ? row.getAttribute('data-fund') : '';
+  if (act === 'edit' && code && fund) openEditForm(code, fund);
+  else if (act === 'del' && code && fund) deleteFund(code, fund);
+  else if (act === 'addfund' && code) openAddFundForm(code);
+  else if (act === 'deluser' && code) deleteUser(code);
+  else if (act === 'toggle' && code) toggleUser(code);
+  else if (act === 'edituser' && code) openEditUserForm(code);
+});
+
+// 启动：初始化 Firebase 并监听登录态
+initAuth();
+
+})();
+</script>
+</body>
+</html>
